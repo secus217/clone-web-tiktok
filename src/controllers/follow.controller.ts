@@ -1,36 +1,33 @@
 import {Elysia, t} from "elysia";
 import followService from "../services/FollowService";
-import authMacro from "../macros/auth";
-import {isAuthenticated} from "../middlewares/isAuthenticated";
+import isAuthenticated from "../middlewares/isAuthenticated";
 
 const followController = new Elysia()
     .group("/follow", group =>
         group
             .use(followService)
-            .use(authMacro)
-            .post("/follow-user", async ({body, followService}) => {
-                const followerId = BigInt(body.followerId);
+            .derive(isAuthenticated())
+            .post("/follow-user", async ({body, followService,user}) => {
                 const followeeId = BigInt(body.followeeId);
-                return await followService.followUser(followerId, followeeId);
+                return await followService.followUser(user.id, followeeId);
             }, {
                 detail: {
                     tags: ["Follow"],
+                    security: [{ JwtAuth: [] }]
                 },
                 body: t.Object({
-                    followerId: t.String(),
                     followeeId: t.String(),
                 })
             })
-            .post("/unfollow-user", async ({body, followService}) => {
-                const followerId = BigInt(body.followerId);
+            .post("/unfollow-user", async ({body, followService,user}) => {
                 const followeeId = BigInt(body.followeeId);
-                return await followService.unfollowUser(followerId, followeeId);
+                return await followService.unfollowUser(user.id, followeeId);
             }, {
                 detail: {
                     tags: ["Follow"],
+                    security: [{ JwtAuth: [] }]
                 },
                 body: t.Object({
-                    followerId: t.String(),
                     followeeId: t.String(),
                 })
             })
@@ -43,7 +40,7 @@ const followController = new Elysia()
                 detail: {
                     tags: ["Follow"],
                     summary: "Get following",
-                    description: "Get all users that the specified user is following"
+                    description: "Get all users that the specified user is following",
                 },
                 params: t.Object({
                     userId: t.String({

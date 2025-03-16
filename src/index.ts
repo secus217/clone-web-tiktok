@@ -10,6 +10,8 @@ import {cors} from '@elysiajs/cors'
 import {opentelemetry} from '@elysiajs/opentelemetry'
 import {BatchSpanProcessor} from '@opentelemetry/sdk-trace-node'
 import {OTLPTraceExporter} from '@opentelemetry/exporter-trace-otlp-proto'
+import { jwt } from '@elysiajs/jwt';
+
 
 const startApp = async () => {
     try {
@@ -17,6 +19,10 @@ const startApp = async () => {
         //sync entities classes to database
         await dataSource.orm.getSchemaGenerator().updateSchema();
         const app = new Elysia()
+            .use(jwt({
+                name: 'jwt', // Tên của plugin
+                secret: 'secretfjsdlkfjasdkldsakljsdkldsfa',
+            }))
             .use(cors())
             .onBeforeHandle(() => RequestContext.enter(dataSource.em))
             .onAfterHandle(responseMiddleware)
